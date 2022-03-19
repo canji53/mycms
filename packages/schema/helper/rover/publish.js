@@ -7,8 +7,7 @@
 
 const { execSync } = require('child_process')
 
-const { CMS_LISTENING_PORT, APOLLO_SCHEMA_REGISTRY, APOLLO_KEY } =
-  process.env
+const { CMS_LISTENING_PORT, APOLLO_SCHEMA_REGISTRY, APOLLO_KEY } = process.env
 
 if (!CMS_LISTENING_PORT) {
   throw new Error('INVALID CONFIG: CMS_LISTENING_PORT is not provided.')

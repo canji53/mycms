@@ -1622,25 +1622,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mycms/cdk@workspace:packages/cdk":
+"@mycms/backend@workspace:packages/backend":
   version: 0.0.0-use.local
-  resolution: "@mycms/cdk@workspace:packages/cdk"
-  dependencies:
-    aws-cdk: ^2.0.0
-    aws-cdk-lib: ^2.0.0
-    constructs: ^10.0.0
-  languageName: unknown
-  linkType: soft
-
-"@mycms/contents@workspace:packages/contents":
-  version: 0.0.0-use.local
-  resolution: "@mycms/contents@workspace:packages/contents"
-  languageName: unknown
-  linkType: soft
-
-"@mycms/graphql@workspace:packages/graphql":
-  version: 0.0.0-use.local
-  resolution: "@mycms/graphql@workspace:packages/graphql"
+  resolution: "@mycms/backend@workspace:packages/backend"
   dependencies:
     "@apollo/subgraph": ^0.3.1
     "@mycms/schema": "*"
@@ -1655,6 +1639,22 @@ __metadata:
     graphql: ^16.3.0
     graphql-scalars: ^1.14.1
     gray-matter: ^4.0.3
+  languageName: unknown
+  linkType: soft
+
+"@mycms/cdk@workspace:packages/cdk":
+  version: 0.0.0-use.local
+  resolution: "@mycms/cdk@workspace:packages/cdk"
+  dependencies:
+    aws-cdk: ^2.0.0
+    aws-cdk-lib: ^2.0.0
+    constructs: ^10.0.0
+  languageName: unknown
+  linkType: soft
+
+"@mycms/contents@workspace:packages/contents":
+  version: 0.0.0-use.local
+  resolution: "@mycms/contents@workspace:packages/contents"
   languageName: unknown
   linkType: soft
 
