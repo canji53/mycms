@@ -6,10 +6,3 @@ type Category {
 extend type Query {
   categories(service: Service!): [Category!]
 }
-
-query fetchCategories($service: Service!) {
-  categories(service: $service) {
-    service
-    title
-  }
-}

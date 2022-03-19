@@ -45,7 +45,7 @@ jobs:
       - name: Publish schema to apollo studio
         working-directory: packages/schema
         env:
-          APOLLO_SCHEMA_REGISTRY: ${{ secrets.APOLLO_SCHEMA_REGISTRY }}
+          APOLLO_GRAPH_REF: ${{ secrets.APOLLO_GRAPH_REF }}
           APOLLO_KEY: ${{ secrets.APOLLO_KEY }}
         run: yarn publish-schema
 

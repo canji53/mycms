@@ -6,10 +6,3 @@ type Tag {
 extend type Query {
   tags(service: Service!): [Tag!]
 }
-
-query fetchTags($service: Service!) {
-  tags(service: $service) {
-    service
-    title
-  }
-}

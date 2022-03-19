@@ -17,16 +17,3 @@ input PageInput {
 extend type Query {
   page(input: PageInput!): Page!
 }
-
-query fetchPage($input: PageInput!) {
-  page(input: $input) {
-    service
-    slug
-    title
-    description
-    thumbnailUrl
-    body
-    createdAt
-    updatedAt
-  }
-}
