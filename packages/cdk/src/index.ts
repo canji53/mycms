@@ -86,8 +86,8 @@ const backendLambda = new ContainerLambda(
     containerRepository: backendContainerRegistry.repository,
     ecrImageCodeProps: {
       tag: BACKEND_IMAGE_TAG,
-      workingDirectory: '/var/task/packages/graphql',
-      cmd: ['packages/graphql/dist/lambda.backendHandler'],
+      workingDirectory: '/var/task/packages/backend',
+      cmd: ['packages/backend/dist/lambda.backendHandler'],
       entrypoint: ['/lambda-entrypoint.sh'],
     },
   }

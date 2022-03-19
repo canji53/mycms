@@ -35,8 +35,8 @@ jobs:
 
       - run: cp .env.example .env
 
-      - name: Start graphql
-        working-directory: packages/graphql
+      - name: Start backend
+        working-directory: packages/backend
         run: |
           nohup yarn start:dev &
           # serverがある程度起動するまで待機

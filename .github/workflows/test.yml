@@ -35,7 +35,7 @@ jobs:
       - run: yarn
 
       # yarn workspaces foreachでは、packages/schemaを先にbuildすることができず、
-      # packages/graphqlで型定義が見つからずに失敗することがある。
+      # packages/backendで型定義が見つからずに失敗することがある。
       # そのため、一番最初にpackages/schemaをbuildしている。
       - name: Build schema first
         working-directory: packages/schema
@@ -46,11 +46,11 @@ jobs:
       - run: cp .env.example .env
 
       - name: Smalltest
-        working-directory: packages/graphql
+        working-directory: packages/backend
         run: yarn smalltest
 
       - name: Mediumtest
-        working-directory: packages/graphql
+        working-directory: packages/backend
         run: yarn mediumtest
 
       - name: Notification
