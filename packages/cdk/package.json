@@ -1,0 +1,17 @@
+{
+  "name": "@mycms/cdk",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "run -T tsc",
+    "watch": "run -T tsc -w",
+    "test": "run -T jest",
+    "cdk": "cdk"
+  },
+  "devDependencies": {
+    "aws-cdk": "^2.0.0",
+    "aws-cdk-lib": "^2.0.0",
+    "constructs": "^10.0.0"
+  }
+}

@@ -1,0 +1,32 @@
+type Page {
+  service: Service!
+  slug: String!
+  title: String!
+  description: String!
+  thumbnailUrl: String!
+  body: String!
+  createdAt: Date!
+  updatedAt: Date!
+}
+
+input PageInput {
+  service: Service!
+  slug: String!
+}
+
+extend type Query {
+  page(input: PageInput!): Page!
+}
+
+query fetchPage($input: PageInput!) {
+  page(input: $input) {
+    service
+    slug
+    title
+    description
+    thumbnailUrl
+    body
+    createdAt
+    updatedAt
+  }
+}

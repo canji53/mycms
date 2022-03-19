@@ -1,0 +1,64 @@
+name: test
+
+on:
+  pull_request:
+    paths-ignore:
+      - '**.md'
+
+jobs:
+  lint:
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        node-version: [14.18.1]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'yarn'
+      - run: yarn
+      - run: yarn lint
+
+  test:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 10
+    strategy:
+      matrix:
+       node-version: [14.18.1]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: yarn
+      - run: yarn
+
+      # yarn workspaces foreachでは、packages/schemaを先にbuildすることができず、
+      # packages/graphqlで型定義が見つからずに失敗することがある。
+      # そのため、一番最初にpackages/schemaをbuildしている。
+      - name: Build schema first
+        working-directory: packages/schema
+        run: yarn build
+
+      - name: Build all pakages
+        run: yarn build
+      - run: cp .env.example .env
+
+      - name: Smalltest
+        working-directory: packages/graphql
+        run: yarn smalltest
+
+      - name: Mediumtest
+        working-directory: packages/graphql
+        run: yarn mediumtest
+
+      - name: Notification
+        if: always()
+        uses: ./.github/actions/notification
+        with:
+          job_status: ${{ job.status }}
+          slack_webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          author_name: Mycms
+          success_message: Mycms Test Success
+          failed_message: Mycms Test Failed

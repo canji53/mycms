@@ -1,0 +1,91 @@
+type Post {
+  service: Service!
+  slug: String!
+  title: String!
+  description: String!
+  category: String!
+  tags: [String!]!
+  thumbnailUrl: String!
+  body: String
+  createdAt: Date!
+  updatedAt: Date!
+}
+
+input PostInput {
+  service: Service!
+  slug: String!
+}
+
+input PostsByCategoryInput {
+  service: Service!
+  category: String!
+}
+
+input PostsByTagInput {
+  service: Service!
+  tag: String!
+}
+
+extend type Query {
+  post(input: PostInput!): Post!
+  posts(service: Service!): [Post!]
+  postsByCategory(input: PostsByCategoryInput!): [Post!]
+  postsByTag(input: PostsByTagInput!): [Post!]
+}
+
+query fetchPost($input: PostInput!) {
+  post(input: $input) {
+    service
+    slug
+    title
+    description
+    category
+    tags
+    thumbnailUrl
+    body
+    createdAt
+    updatedAt
+  }
+}
+
+query fetchPosts($service: Service!) {
+  posts(service: $service) {
+    service
+    slug
+    title
+    description
+    category
+    tags
+    thumbnailUrl
+    createdAt
+    updatedAt
+  }
+}
+
+query fetchPostsByCategory($input: PostsByCategoryInput!) {
+  postsByCategory(input: $input) {
+    service
+    slug
+    title
+    description
+    category
+    tags
+    thumbnailUrl
+    createdAt
+    updatedAt
+  }
+}
+
+query fetchPostsByTag($input: PostsByTagInput!) {
+  postsByTag(input: $input) {
+    service
+    slug
+    title
+    description
+    category
+    tags
+    thumbnailUrl
+    createdAt
+    updatedAt
+  }
+}

@@ -1,0 +1,42 @@
+
+name: Notification
+
+description: Notification by Slack
+
+inputs:
+  job_status:
+    description: job status
+    required: true
+  slack_webhook_url:
+    description: slack webhook url
+    required: true
+  author_name:
+    description: message author name
+    required: true
+  success_message:
+    description: success message
+    required: true
+  failed_message:
+    description: failed message
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Notification
+      uses: 8398a7/action-slack@v3
+      env:
+        SLACK_WEBHOOK_URL: ${{ inputs.slack_webhook_url }}
+      with:
+        status: custom
+        custom_payload: |
+          {
+            attachments: [{
+              fields: 'job',
+              author_name: '${{ inputs.author_name }}',
+              mention: 'here',
+              if_mention: 'failure',
+              color: '${{ inputs.job_status }}' === 'success' ? 'good' : 'danger',
+              text: '${{ inputs.job_status }}' === 'success' ? '${{ inputs.success_message }}' : '${{ inputs.failed_message }}',
+            }]
+          }

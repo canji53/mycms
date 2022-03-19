@@ -1,0 +1,17 @@
+generates:
+  dist/schema.graphql:
+    schema:
+      - src/**/*.graphql
+    plugins:
+      - schema-ast
+
+  dist/index.ts:
+    schema:
+      - src/**/*.graphql
+    plugins:
+      - typescript
+      - typescript-resolvers
+    config:
+      typesPrefix: GQL
+      noSchemaStitching: true
+      constEnums: true

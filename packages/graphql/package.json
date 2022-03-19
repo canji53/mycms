@@ -1,0 +1,32 @@
+{
+  "name": "@mycms/graphql",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "start:dev": "run -T dotenv -e ../../.env nodemon",
+    "build": "run -T npm-run-all 'build:*'",
+    "build:clean": "run -T rimraf dist",
+    "build:ts": "run -T tsc",
+    "lint": "run -T eslint 'src/**/**.{ts,json,js}' --cache",
+    "smalltest": "NODE_ENV=test run -T jest /small/",
+    "mediumtest": "NODE_ENV=test run -T jest /medium/"
+  },
+  "dependencies": {
+    "@apollo/subgraph": "^0.3.1",
+    "@mycms/schema": "*",
+    "@vendia/serverless-express": "^4.5.4",
+    "apollo-server-express": "^3.6.3",
+    "aws-lambda": "^1.0.7",
+    "debug": "^4.3.3",
+    "express": "^4.17.3",
+    "graphql": "^16.3.0",
+    "graphql-scalars": "^1.14.1",
+    "gray-matter": "^4.0.3"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.93",
+    "@types/debug": "^4.1.7",
+    "@types/express": "^4.17.13"
+  }
+}

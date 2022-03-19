@@ -1,0 +1,139 @@
+name: provisioning
+
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+    branches:
+      - 'main'
+
+env:
+  AWS_WEB_IDENTITY_TOKEN_FILE: /tmp/awscreds
+  AWS_DEFAULT_REGION: ap-northeast-1
+  AWS_REGION: ap-northeast-1 # cdk 内部で sdk を利用する関係で AWS_REGION が必要
+  AUDIENCE: sts.amazonaws.com
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        node-version: [14.18.1]
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'yarn'
+      - run: yarn
+
+      - name: Build schema first
+        working-directory: packages/schema
+        run: yarn build
+
+      - name: Build all pakages
+        run: yarn build
+
+      - name: Configure AWS
+        run: |
+          echo "AWS_ROLE_ARN=arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/mycms-deploy" >> $GITHUB_ENV
+          curl -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$AUDIENCE" | jq -r '.value' > $AWS_WEB_IDENTITY_TOKEN_FILE
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build tag, and push image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: mycms-backend
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Notification
+        if: always()
+        uses: ./.github/actions/notification
+        with:
+          job_status: ${{ job.status }}
+          slack_webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          author_name: Mycms
+          success_message: Mycms Build & Push Success
+          failed_message: Mycms Build & Push Failed
+
+  provision:
+    needs: [build]
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        node-version: [14.18.1]
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      BACKEND_IMAGE_TAG: ${{ github.sha }}
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'yarn'
+      - run: yarn
+
+      - name: Configure AWS
+        run: |
+          echo "AWS_ROLE_ARN=arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/mycms-deploy" >> $GITHUB_ENV
+          curl -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$AUDIENCE" | jq -r '.value' > $AWS_WEB_IDENTITY_TOKEN_FILE
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Check stack differences
+        working-directory: packages/cdk
+        # IMAGEのTAGが毎度変わるため、必ずcdkがexit1で終わってしまう。そのため`|| true`でexit0にしている
+        run: |
+          yarn cdk diff || true
+
+      - name: Deploy stack
+        working-directory: packages/cdk
+        run: |
+          yarn cdk deploy --require-approval never --all
+
+      - name: Deploy (=Create) the blue of API Gateway deployment
+        run: |
+          MYCMS_BLUE_API_ID=$(aws apigateway get-rest-apis | jq -r '.items[] | select(.name == "mycms-blue-backend") | .id')
+
+          # デプロイメントを更新しないと API Gateway 自体の更新が反映されないため
+          aws apigateway create-deployment \
+            --rest-api-id $MYCMS_BLUE_API_ID \
+            --stage-name blue \
+            --description "For blue deployment by CICD"
+
+      - name: Notification
+        if: always()
+        uses: ./.github/actions/notification
+        with:
+          job_status: ${{ job.status }}
+          slack_webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          author_name: Mycms
+          success_message: Mycms Provisiong Success
+          failed_message: Mycms Provisiong Failed
+
+  e2e-test:
+    needs: [provision]
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        node-version: [14.18.1]
+
+    steps:
+      - name: e2e test for blue resources
+        run: |
+          echo success

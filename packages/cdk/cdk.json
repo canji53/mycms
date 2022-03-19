@@ -1,0 +1,3 @@
+{
+  "app": "run -T ts-node src/index.ts"
+}

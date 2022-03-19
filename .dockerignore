@@ -1,0 +1,11 @@
+documents
+packages/cdk
+.commit_template
+.editorconfig
+.env*
+.eslitrc.js
+.node-version
+.prettierignore
+.prettierrc.js
+README.md
+Dockerfile

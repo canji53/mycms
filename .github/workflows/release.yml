@@ -1,0 +1,111 @@
+name: release
+
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+    tags:
+      - 'v*'
+
+env:
+  AWS_WEB_IDENTITY_TOKEN_FILE: /tmp/awscreds
+  AWS_DEFAULT_REGION: ap-northeast-1
+  AWS_REGION: ap-northeast-1 # cdk 内部で sdk を利用する関係で AWS_REGION が必要
+  AUDIENCE: sts.amazonaws.com
+
+jobs:
+  publish-schema:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: yarn
+      - run: yarn
+
+      - name: Build schema first
+        working-directory: packages/schema
+        run: yarn build
+
+      - name: Build all pakages
+        run: yarn build
+
+      - run: cp .env.example .env
+
+      - name: Start graphql
+        working-directory: packages/graphql
+        run: |
+          nohup yarn start:dev &
+          # serverがある程度起動するまで待機
+          sleep 30
+
+      - name: Publish schema to apollo studio
+        working-directory: packages/schema
+        env:
+          APOLLO_SCHEMA_REGISTRY: ${{ secrets.APOLLO_SCHEMA_REGISTRY }}
+          APOLLO_KEY: ${{ secrets.APOLLO_KEY }}
+        run: yarn publish-schema
+
+      - name: Notification
+        if: always()
+        uses: ./.github/actions/notification
+        with:
+          job_status: ${{ job.status }}
+          slack_webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          author_name: Mycms
+          success_message: Mycms Publish schema Success
+          failed_message: Mycms Publish schema Failed
+
+  deploy:
+    runs-on: ubuntu-20.04
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Configure AWS
+        run: |
+          echo "AWS_ROLE_ARN=arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/mycms-deploy" >> $GITHUB_ENV
+          curl -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$AUDIENCE" | jq -r '.value' > $AWS_WEB_IDENTITY_TOKEN_FILE
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Publish new version of Lambda, Update "v1" alias to new version
+        run: |
+          aws lambda publish-version --function-name mycms-backend >> response.json
+
+          # 発行されたナンバリングバージョンを取得
+          JSON=`cat response.json`
+          LAMBDA_NEW_VERSION=$(echo $JSON | jq -r '.Version')
+
+          # 発行バージョンを "v1" にエイリアス
+          aws lambda update-alias \
+            --function-name mycms-backend \
+            --function-version $LAMBDA_NEW_VERSION \
+            --name v1
+
+      - name: Deploy (=Create) the "v1" stage of API Gateway deployment
+        run: |
+          MYCMS_PRODUCTION_API_ID=$(aws apigateway get-rest-apis | jq -r '.items[] | select(.name == "mycms-production-backend") | .id')
+
+          aws apigateway create-deployment \
+            --rest-api-id ${MYCMS_PRODUCTION_API_ID} \
+            --stage-name v1 \
+            --description "For v1 stage deployment by CICD"
+
+      - name: Notification
+        if: always()
+        uses: ./.github/actions/notification
+        with:
+          job_status: ${{ job.status }}
+          slack_webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          author_name: Mycms
+          success_message: Mycms Release Success
+          failed_message: Mycms Release Failed

@@ -1,0 +1,15 @@
+type Tag {
+  service: Service!
+  title: String!
+}
+
+extend type Query {
+  tags(service: Service!): [Tag!]
+}
+
+query fetchTags($service: Service!) {
+  tags(service: $service) {
+    service
+    title
+  }
+}

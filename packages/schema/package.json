@@ -1,0 +1,21 @@
+{
+  "name": "@mycms/schema",
+  "version": "1.0.0",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "run -T npm-run-all 'build:*'",
+    "build:clean": "run -T rimraf dist",
+    "build:generate": "graphql-codegen --config codegen.yml",
+    "build:transpile": "run -T tsc",
+    "publish-schema": "run -T dotenv -e ../../.env node helper/rover/publish.js"
+  },
+  "devDependencies": {
+    "@apollo/rover": "^0.4.5",
+    "@graphql-codegen/cli": "^2.6.2",
+    "@graphql-codegen/schema-ast": "^2.4.1",
+    "@graphql-codegen/typescript": "^2.4.5",
+    "@graphql-codegen/typescript-resolvers": "^2.5.2",
+    "graphql": "^16.3.0"
+  }
+}
